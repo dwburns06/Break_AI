@@ -37,24 +37,20 @@ fn get_vowel(letters: u32) -> usize {
 }
 
 fn m_i(
-    cur_solutions: u32,
     cur_iter: usize,
     mask: u32,
-    total_solutions: &mut u32,
+    cur_ans: &mut [u32; 5],
+    ans: &mut HashSet<[u32; 5]>,
     io: &[usize; 5],
     ll: &[Vec<u32>; 7],
-    wf: &HashMap<u32, u32>,
-) -> Option<Vec<Vec<u32>>> {
+    temp: &HashMap<u32, Vec<String>>,
+) {
 
-    if cur_iter == 4 {
-        let fnl: Vec<Vec<u32>> = ll[io[cur_iter]]
-            .iter()
-            .filter_map(|x| return if *x & mask == 0 { Some(vec![*x]) } else { None } )
-            .collect();
-        return if fnl.is_empty() { None } else {
-            *total_solutions += cur_solutions + 1;
-            Some(fnl)
-        }
+    if cur_iter == 5 {
+        let mut ins = cur_ans.clone();
+        ins.sort();
+        ans.insert(ins);
+        return
     }
 
     let words: Vec<u32> =
@@ -68,15 +64,10 @@ fn m_i(
             ll[io[cur_iter]].clone()
         };
 
-    let mut ans: Vec<Vec<u32>> = Vec::new();
     for word in words {
-        if let Some(mut success ) = m_i(cur_solutions + wf[&word] - 1, cur_iter + 1, mask | word, total_solutions, io, ll, wf) {
-            success.iter_mut().for_each(|x| x.push(word));
-            ans.extend(success);
-        }
+        cur_ans[cur_iter] = word;
+        m_i(cur_iter + 1, mask | word, cur_ans, ans, io, ll, temp);
     }
-
-    if ans.is_empty() { None } else { Some(ans) }
 }
 
 fn main() {
@@ -86,7 +77,6 @@ fn main() {
     .expect("Something went wrong reading the file");
 
     let mut wordlst: HashMap<u32, Vec<String>> = HashMap::new();
-    let mut wordfreq: HashMap<u32, u32> = HashMap::new();
     let mut letterslst: [Vec<u32>; 7] = [Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new()];
 
     for cont in contents.lines() {
@@ -97,7 +87,6 @@ fn main() {
                     letterslst[get_vowel(word)].push(word);
                 }
                 if let Some(val) = wordlst.get_mut(&word) { val.push(cont.to_string()); };
-                *wordfreq.entry(word).or_insert(0) += 1;
             },
             None => {
                 //pass
@@ -148,16 +137,12 @@ fn main() {
     // }
 
     let mut ans: HashSet<[u32; 5]> = HashSet::new();
-    let mut total_solutions: u32 = 0;
+    let mut cur: [u32; 5] = [0, 0, 0, 0, 0];
 
     let mid: Instant = Instant::now();
 
     for i in iter_order.iter() {
-        if let Some(mut a) = m_i(0, 0, 0, &mut total_solutions, &i, &letterslst, &wordfreq) {
-            a.iter_mut().for_each(|x| x.sort());
-            let t: HashSet<[u32; 5]> = a.into_iter().map(|x| -> [u32; 5] { [x[0], x[1], x[2], x[3], x[4]] }).collect();
-            ans.extend(t);
-        }
+        m_i(0, 0, &mut cur, &mut ans, &i, &letterslst, &wordlst);
     }
 
     let process_time: u128 = mid.elapsed().as_millis();
@@ -193,10 +178,12 @@ fn main() {
     let c_contents = fs::read_to_string("expected.txt")
         .expect("Something went wrong reading the file");
 
+    let mut missing = 0;
+
     for cont in c_contents.lines() {
         let words_iter = cont.to_string();
-        let mut cur: [u32; 5] = [0,0,0,0,0];
-        let mut i = 0;
+        let mut cur: [u32; 5] = [0; 5];
+        let mut i: usize = 0;
         for word in words_iter.split_whitespace() {
             if let Some(j) = valid_word(word.to_string()) {
                 cur[i] = j;
@@ -207,7 +194,8 @@ fn main() {
         cur.sort();
 
         if !ans.contains(&cur) {
-            println!("MISSING: {}", words_iter);
+            // println!("MISSING: {}", words_iter);
+            missing += 1;
         }
     }
 
@@ -215,5 +203,6 @@ fn main() {
     println!("{:5}ms Processing time", process_time);
     println!("{:5}ms Total time", begin.elapsed().as_millis());
     println!("Found {} unique solutions", ans.len());
-    println!("Found {} total solutions", total_solutions);
+    println!("Missing {} solutions", missing);
+
 }
