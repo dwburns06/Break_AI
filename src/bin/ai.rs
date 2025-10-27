@@ -1,8 +1,6 @@
 use std::fs::File;
 use std::io::{BufRead, BufReader, BufWriter, Write};
 use std::time::Instant;
-use tqdm::tqdm;
-
 
 #[derive(Clone, Copy)]
 struct Word {
@@ -30,7 +28,7 @@ fn find_combinations(words: &[Word], original_words: &[String]) -> Vec<[u16; 5]>
     let mut results = Vec::new();
     let n = words.len();
 
-    for i in tqdm(0..n) {
+    for i in 0..n {
         let w1 = words[i];
         for j in (i + 1)..n {
             let w2 = words[j];

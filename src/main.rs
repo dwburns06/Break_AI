@@ -43,14 +43,17 @@ fn m_i(
     ans: &mut HashSet<[u32; 5]>,
     io: &[usize; 5],
     ll: &[Vec<u32>; 7],
-    temp: &HashMap<u32, Vec<String>>,
-) {
+    num_an: &HashMap<u32, usize>,
+) -> usize {
 
     if cur_iter == 5 {
         let mut ins = cur_ans.clone();
         ins.sort();
+        if ans.contains(&ins) {
+            return 0;
+        }
         ans.insert(ins);
-        return
+        return 1;
     }
 
     let words: Vec<u32> =
@@ -64,10 +67,14 @@ fn m_i(
             ll[io[cur_iter]].clone()
         };
 
+    let mut this_ans = 0;
+
     for word in words {
         cur_ans[cur_iter] = word;
-        m_i(cur_iter + 1, mask | word, cur_ans, ans, io, ll, temp);
+        this_ans += m_i(cur_iter + 1, mask | word, cur_ans, ans, io, ll, num_an) * num_an[&word];
     }
+
+    this_ans
 }
 
 fn main() {
@@ -93,6 +100,8 @@ fn main() {
                 }
         }
     }
+
+    let num_anagrams: HashMap<u32, usize> = wordlst.iter().map(|(&i, j)| (i, j.len())).collect();
 
     let read_time: u128 = begin.elapsed().as_millis();
 
@@ -141,39 +150,13 @@ fn main() {
 
     let mid: Instant = Instant::now();
 
+    let mut total_ans = 0;
+
     for i in iter_order.iter() {
-        m_i(0, 0, &mut cur, &mut ans, &i, &letterslst, &wordlst);
+        total_ans += m_i(0, 0, &mut cur, &mut ans, &i, &letterslst, &num_anagrams);
     }
 
     let process_time: u128 = mid.elapsed().as_millis();
-
-    #[allow(dead_code)]
-    fn print_combinations_with_option<T: std::fmt::Display>(
-        vecs: &[&Vec<T>],
-        current: &mut Vec<String>,
-        depth: usize,
-    ) {
-        if depth == vecs.len() {
-            // Print the current combination
-            println!("{}", current.join(" "));
-            return;
-        }
-
-        // Iterate through all options at this depth
-        for item in vecs[depth].iter() {
-            current.push(item.to_string());
-            print_combinations_with_option(vecs, current, depth + 1);
-            current.pop();
-        }
-    }
-
-    // for lst in ans.iter() {
-    //     let vecs: Vec<&Vec<_>> = lst.iter()
-    //         .map(|letters| &wordlst[letters])
-    //         .collect();
-    //
-    //     print_combinations_with_option(&vecs, &mut vec![], 0);
-    // }
 
     let c_contents = fs::read_to_string("expected.txt")
         .expect("Something went wrong reading the file");
@@ -194,7 +177,6 @@ fn main() {
         cur.sort();
 
         if !ans.contains(&cur) {
-            // println!("MISSING: {}", words_iter);
             missing += 1;
         }
     }
@@ -203,6 +185,7 @@ fn main() {
     println!("{:5}ms Processing time", process_time);
     println!("{:5}ms Total time", begin.elapsed().as_millis());
     println!("Found {} unique solutions", ans.len());
+    println!("Found {} total solutions", total_ans);
     println!("Missing {} solutions", missing);
 
 }

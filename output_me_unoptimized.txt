@@ -1,0 +1,5 @@
+  111ms Reading time
+ 1540ms Processing time
+ 1655ms Total time
+Found 538 unique solutions
+Missing 0 solutions
