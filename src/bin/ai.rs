@@ -24,13 +24,15 @@ fn str_to_mask(s: &str) -> Option<u32> {
     Some(mask)
 }
 
-fn find_combinations(words: &[Word], original_words: &[String]) -> Vec<[u16; 5]> {
+fn find_combinations(words: &[Word], original_words: &[String], comp: &mut u128) -> Vec<[u16; 5]> {
     let mut results = Vec::new();
     let n = words.len();
 
     for i in 0..n {
         let w1 = words[i];
+        *comp += 1;
         for j in (i + 1)..n {
+            *comp += 1;
             let w2 = words[j];
             if w1.mask & w2.mask != 0 {
                 continue;
@@ -38,6 +40,7 @@ fn find_combinations(words: &[Word], original_words: &[String]) -> Vec<[u16; 5]>
             let mask12 = w1.mask | w2.mask;
 
             for k in (j + 1)..n {
+                *comp += 1;
                 let w3 = words[k];
                 if mask12 & w3.mask != 0 {
                     continue;
@@ -45,6 +48,7 @@ fn find_combinations(words: &[Word], original_words: &[String]) -> Vec<[u16; 5]>
                 let mask123 = mask12 | w3.mask;
 
                 for l in (k + 1)..n {
+                    *comp += 1;
                     let w4 = words[l];
                     if mask123 & w4.mask != 0 {
                         continue;
@@ -52,6 +56,7 @@ fn find_combinations(words: &[Word], original_words: &[String]) -> Vec<[u16; 5]>
                     let mask1234 = mask123 | w4.mask;
 
                     for m in (l + 1)..n {
+                        *comp += 1;
                         let w5 = words[m];
                         if mask1234 & w5.mask != 0 {
                             continue;
@@ -101,8 +106,9 @@ fn main() -> std::io::Result<()> {
 
     let mid: Instant = Instant::now();
 
+    let mut comparisons: u128 = 0;
     // Find all combinations
-    let combinations = find_combinations(&words, &original_words);
+    let combinations = find_combinations(&words, &original_words, &mut comparisons);
 
     let process_time: u128 = mid.elapsed().as_millis();
 
@@ -128,6 +134,7 @@ fn main() -> std::io::Result<()> {
     println!("{:5}ms Processing time", process_time);
     println!("{:5}ms Total time", begin.elapsed().as_millis());
     println!("Found {} solutions", combinations.len());
+    println!("Comparisons: {}", comparisons);
 
     Ok(())
 }

@@ -1,6 +1,6 @@
-  111ms Reading time
- 1540ms Processing time
- 1655ms Total time
+  109ms Reading time
+ 2775ms Processing time
+ 2887ms Total time
 Found 538 unique solutions
 Found 831 total solutions
 Missing 0 solutions
